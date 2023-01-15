@@ -34,6 +34,10 @@ defmodule Pleroma.Workers.WorkerHelper do
 
       alias Oban.Job
 
+      def backoff(%Job{attempt: attempt}) when is_integer(attempt) do
+        Pleroma.Workers.WorkerHelper.sidekiq_backoff(attempt, 5)
+      end
+
       def enqueue(op, params, worker_args \\ []) do
         params = Map.merge(%{"op" => op}, params)
         queue_atom = String.to_atom(unquote(queue))
