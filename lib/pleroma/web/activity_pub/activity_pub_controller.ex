@@ -287,12 +287,6 @@ defmodule Pleroma.Web.ActivityPub.ActivityPubController do
     json(conn, "ok")
   end
 
-  def inbox(%{assigns: %{valid_signature: false}} = conn, _params) do
-    conn
-    |> put_status(:bad_request)
-    |> json("Invalid HTTP Signature")
-  end
-
   # POST /relay/inbox -or- POST /internal/fetch/inbox
   def inbox(conn, %{"type" => "Create"} = params) do
     if FederatingPlug.federating?() do
@@ -302,6 +296,12 @@ defmodule Pleroma.Web.ActivityPub.ActivityPubController do
       |> put_status(:bad_request)
       |> json("Not federating")
     end
+  end
+
+  def inbox(%{assigns: %{valid_signature: false}} = conn, _params) do
+    conn
+    |> put_status(:bad_request)
+    |> json("Invalid HTTP Signature")
   end
 
   def inbox(conn, _params) do
