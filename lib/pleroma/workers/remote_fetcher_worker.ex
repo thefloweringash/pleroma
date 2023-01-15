@@ -9,7 +9,21 @@ defmodule Pleroma.Workers.RemoteFetcherWorker do
 
   @impl Oban.Worker
   def perform(%Job{args: %{"op" => "fetch_remote", "id" => id} = args}) do
-    {:ok, _object} = Fetcher.fetch_object_from_id(id, depth: args["depth"])
+    with {:ok, _object} <- Fetcher.fetch_object_from_id(id, depth: args["depth"]) do
+      :ok
+    else
+      {:error, "Max thread distance exceeded."} = e ->
+        {:discard, e}
+
+      {:error, "Object has been deleted"} = e ->
+        {:discard, e}
+
+      {:reject, _reason} = e ->
+        {:discard, e}
+
+      {:error, _reason} = e ->
+        e
+    end
   end
 
   @impl Oban.Worker
