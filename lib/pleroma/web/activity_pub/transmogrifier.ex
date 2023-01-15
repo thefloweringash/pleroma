@@ -158,6 +158,16 @@ defmodule Pleroma.Web.ActivityPub.Transmogrifier do
       else
         e ->
           Logger.warn("Couldn't fetch #{inspect(in_reply_to_id)}, error: #{inspect(e)}")
+
+          # This branch succeeds and returns the object, but we know we didn't
+          # fetch the inReplyTo objeect (and, presumably, any of its inReplyTo
+          # objects), so we need to make a note for ourself to continue from
+          # here later.
+          Pleroma.Workers.RemoteFetcherWorker.enqueue("fetch_remote", %{
+            "id" => in_reply_to_id,
+            "depth" => depth
+          })
+
           object
       end
     else
